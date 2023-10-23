@@ -38,9 +38,9 @@ def get_recipes(path):
     return sorted([v.replace(".md", "") for v in os.listdir(path) if v.endswith(".md")])
 
 
-def main():
+def main(datadir):
     st.title("Recipe App")
-    recipes = get_recipes("data")
+    recipes = get_recipes(datadir)
     recipes = st.multiselect("Recipe", recipes)
     for recipe in recipes:
         st.header(recipe)
@@ -60,4 +60,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    main("data")
