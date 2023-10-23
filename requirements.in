@@ -1,4 +1,5 @@
-streamlit
-ruff
 black
+pandas
 pytest
+ruff
+streamlit
