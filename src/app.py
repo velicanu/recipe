@@ -12,21 +12,22 @@ def get_grams(item, unit, quantity, masses, volumes, densities):
 
 
 def parse(line):
-    result = re.search(r"([\d]*) g - ([\w]*)", line)
-    if not result:
-        return None, None
-    return result.group(1), result.group(2)
+    result = line.lower().strip().split(" - ")
+    return (
+        float(result[0].replace(" g", "")) if result[0] else None,
+        result[1] if len(result) > 1 else None,
+        result[2] if len(result) > 2 else None,
+    )
 
 
 def load_recipe(path):
     ingredients = []
-    ingredients_flag = True
     for line in open(path, "r"):
-        mass, item = parse(line)
-        if mass and item and ingredients_flag:
-            ingredients.append({"mass (g)": mass, "item": item})
-        if not mass:
-            ingredients_flag = False
+        mass, item, notes = parse(line)
+        if mass:
+            ingredients.append({"mass (g)": mass, "item": item, "notes": notes})
+        else:
+            break
 
     df = pd.DataFrame(ingredients)
     if "item" in df.columns:
@@ -44,16 +45,26 @@ def main(datadir):
     recipes = st.multiselect("Recipe", recipes)
     for recipe in recipes:
         st.header(recipe)
-        col1, col2 = st.columns(2)
+        col1, col2 = st.columns([27, 10])
         df_in = load_recipe(os.path.join("data", f"{recipe}.md"))
         with col2:
             scale = st.number_input(
-                "Scale", key=f"scale_{recipe}", value=1.0, format="%.2f"
+                "Scale", key=f"scale_{recipe}", value=1.0, format="%.2f", step=0.1
             )
         if "mass (g)" in df_in.columns:
-            df_in["mass (g)"] = df_in["mass (g)"].astype(float) * scale
+            df_in["mass (g)"] = df_in["mass (g)"] * scale
         with col1:
-            st.write(df_in)
+            st.dataframe(
+                df_in,
+                use_container_width=True,
+                column_config={
+                    "item": st.column_config.TextColumn("item"),
+                    "mass (g)": st.column_config.NumberColumn(
+                        "mass (g)", width="small"
+                    ),
+                    "notes": st.column_config.TextColumn("notes", width="large"),
+                },
+            )
 
     # st.write("Hello World!")
     return "done"
